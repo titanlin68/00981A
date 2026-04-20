@@ -6,7 +6,7 @@
     <style>
         body { font-family: sans-serif; background: #f8f9fa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        #r { font-size: 3.5em; font-weight: bold; margin: 15px 0; }
+        .ratio { font-size: 3em; font-weight: bold; margin: 20px 0; color: #333; }
         .details { display: flex; justify-content: space-around; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
         .val { font-weight: bold; font-size: 1.2em; }
         .time { color: #ccc; font-size: 0.7em; margin-top: 30px; }
@@ -15,15 +15,15 @@
 <body>
     <div class="card">
         <div style="font-weight: bold; color: #007bff;">00981A 統一台股增長</div>
-        <div id="r">--%</div>
+        <div id="r" class="ratio">--%</div>
         <div class="details">
             <div><div style="color:#888; font-size:0.8em;">市價</div><div id="p" class="val">--</div></div>
             <div><div style="color:#888; font-size:0.8em;">淨值</div><div id="n" class="val">--</div></div>
         </div>
-        <div class="time">最後更新：<span id="t">--</span></div>
+        <div class="time">最後校準：<span id="t">--</span></div>
     </div>
     <script>
-        async function load() {
+        async function up() {
             try {
                 const res = await fetch('etf_data.json?t=' + Date.now());
                 const d = await res.json();
@@ -35,7 +35,7 @@
                 rEl.style.color = d.ratio > 0.15 ? '#dc3545' : (d.ratio < -0.15 ? '#28a745' : '#333');
             } catch(e) {}
         }
-        load(); setInterval(load, 5000);
+        up(); setInterval(up, 5000);
     </script>
 </body>
 </html>
