@@ -2,82 +2,111 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>00981A 即時監控儀表板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>00981A 即時折溢價監控</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f4f7f6; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .status-box { margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1.2em; }
-        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .label { color: #666; font-size: 0.9em; }
-        .value { font-size: 1.5em; font-weight: bold; }
-        .highlight { color: #2c3e50; }
+        body { 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            max-width: 450px; 
+            width: 100%;
+        }
+        h2 { text-align: center; color: #1a1a1a; margin-bottom: 20px; }
+        
+        /* TradingView 組件容器 */
+        .widget-wrapper {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .price-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        .price-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .label { color: #666; font-size: 0.85em; margin-bottom: 5px; }
+        .value { font-size: 1.4em; font-weight: bold; color: #2d3436; }
+        
+        .status-box { 
+            padding: 20px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            text-align: center; 
+            font-size: 1.3em;
+            transition: all 0.3s ease;
+        }
+        
+        .info-footer { 
+            font-size: 0.75em; 
+            color: #999; 
+            text-align: center; 
+            margin-top: 20px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="text-align: center;">00981A 即時折溢價監控</h2>
+<div class="container">
+    <h2>00981A 監控儀表板</h2>
     
-    <div style="height: 200px; overflow: hidden; border-radius: 8px;">
-        <iframe src="https://www.google.com/finance/quote/00981A:TPE" style="width: 100%; height: 500px; border: none; margin-top: -150px;"></iframe>
+    <div class="widget-wrapper">
+        <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+            {
+              "symbol": "TWSE:00981A",
+              "width": "100%",
+              "colorTheme": "light",
+              "isTransparent": false,
+              "locale": "zh_TW"
+            }
+            </script>
+        </div>
     </div>
-
-    <hr>
 
     <div class="price-grid">
-        <div>
-            <div class="label">目前市價 (網頁即時)</div>
-            <div id="realtime-price" class="value highlight">讀取中...</div>
+        <div class="price-item">
+            <div class="label">市價 (GitHub)</div>
+            <div id="price-val" class="value">--</div>
         </div>
-        <div>
-            <div class="label">最後計算淨值</div>
-            <div id="last-nav" class="value highlight">讀取中...</div>
+        <div class="price-item">
+            <div class="label">預估淨值</div>
+            <div id="nav-val" class="value">--</div>
         </div>
     </div>
 
-    <div id="ratio-box" class="status-box" style="background: #eee;">
-        折溢價率: <span id="ratio-value">--</span>%
+    <div id="status-display" class="status-box" style="background: #eee;">
+        讀取數據中...
     </div>
 
-    <p style="font-size: 0.8em; color: #999; text-align: center;">
-        系統每 5 秒會重新對齊數據一次<br>
-        最後數據更新來源: <span id="update-time">--</span>
-    </p>
+    <div class="info-footer">
+        系統每 5 秒自動同步一次數據<br>
+        數據最後更新時間：<span id="update-time">--</span><br>
+        (註：淨值更新頻率受限於 GitHub Actions 週期)
+    </div>
 </div>
 
 <script>
-    async function updateData() {
+    async function refreshData() {
         try {
-            // 讀取 GitHub Actions 產生的 JSON 作為淨值基準
-            const response = await fetch('etf_data.json?t=' + new Date().getTime());
-            const data = await response.json();
-            
-            // 模擬：獲取最新市價 (實務上若需極致 5 秒，可串接更專業 API，
-            // 此處維持與 JSON 同步，但網頁會每 5 秒檢查一次檔案變動)
-            document.getElementById('update-time').innerText = data.update_time;
-            document.getElementById('realtime-price').innerText = data.price;
-            document.getElementById('last-nav').innerText = data.nav;
-            document.getElementById('ratio-value').innerText = data.ratio;
-            
-            const box = document.getElementById('ratio-box');
-            if (data.ratio > 0) {
-                box.style.backgroundColor = '#ffeef0';
-                box.style.color = '#d63031';
-                box.innerText = `目前溢價: ${data.ratio}% (建議觀望)`;
-            } else {
-                box.style.backgroundColor = '#e3f9e5';
-                box.style.color = '#27ae60';
-                box.innerText = `目前折價: ${data.ratio}% (相對便宜)`;
-            }
-        } catch (e) {
-            console.log("正在等待數據同步...");
-        }
-    }
-
-    // 每 5 秒執行一次更新
-    setInterval(updateData, 5000);
-    updateData();
-</script>
-
-</body>
-</html>
