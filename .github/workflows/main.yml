@@ -1,0 +1,33 @@
+name: ETF Real-time Analysis
+
+on:
+  schedule:
+    - cron: '*/10 1-6 * * 1-5' # 週一至週五，台股開盤期間每 10 分鐘執行 (UTC 時間)
+  workflow_dispatch: # 允許手動執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 yfinance
+
+      - name: Run analysis
+        run: python analysis.py
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add etf_data.json
+          git commit -m "Update ETF data" || exit 0
+          git push
