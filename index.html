@@ -3,110 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>00981A 即時折溢價監控</title>
+    <title>00981A 投資監控</title>
     <style>
-        body { 
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            padding: 20px; 
-            background-color: #f0f2f5; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .container { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            max-width: 450px; 
-            width: 100%;
-        }
-        h2 { text-align: center; color: #1a1a1a; margin-bottom: 20px; }
+        :root { --red: #e74c3c; --green: #27ae60; --bg: #f5f6fa; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); max-width: 400px; width: 90%; text-align: center; }
+        .header { margin-bottom: 25px; }
+        .symbol { font-size: 2.2em; font-weight: 800; color: #2d3436; margin: 0; }
+        .name { color: #636e72; font-size: 1em; margin-top: 5px; }
         
-        /* TradingView 組件容器 */
-        .widget-wrapper {
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
+        .main-display { margin: 25px 0; }
+        .ratio-badge { font-size: 2em; font-weight: bold; padding: 15px; border-radius: 16px; margin-bottom: 10px; transition: all 0.4s; }
+        .status-text { font-size: 1.1em; font-weight: 600; margin-top: 10px; }
 
-        .price-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
-            margin-bottom: 20px; 
-        }
-        .price-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .label { color: #666; font-size: 0.85em; margin-bottom: 5px; }
-        .value { font-size: 1.4em; font-weight: bold; color: #2d3436; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; border-top: 1px solid #eee; padding-top: 25px; }
+        .detail-item { text-align: center; }
+        .label { color: #b2bec3; font-size: 0.85em; margin-bottom: 5px; text-transform: uppercase; }
+        .price { font-size: 1.5em; font-weight: 700; color: #2d3436; }
         
-        .status-box { 
-            padding: 20px; 
-            border-radius: 12px; 
-            font-weight: bold; 
-            text-align: center; 
-            font-size: 1.3em;
-            transition: all 0.3s ease;
-        }
-        
-        .info-footer { 
-            font-size: 0.75em; 
-            color: #999; 
-            text-align: center; 
-            margin-top: 20px;
-            line-height: 1.6;
-        }
+        .footer { font-size: 0.75em; color: #b2bec3; margin-top: 30px; line-height: 1.5; }
+        .dot { height: 8px; width: 8px; background-color: #dfe6e9; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>00981A 監控儀表板</h2>
-    
-    <div class="widget-wrapper">
-        <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-            {
-              "symbol": "TWSE:00981A",
-              "width": "100%",
-              "colorTheme": "light",
-              "isTransparent": false,
-              "locale": "zh_TW"
-            }
-            </script>
-        </div>
+<div class="card">
+    <div class="header">
+        <p class="symbol">00981A</p>
+        <p class="name">凱基台灣優選高股息 30</p>
     </div>
 
-    <div class="price-grid">
-        <div class="price-item">
-            <div class="label">市價 (GitHub)</div>
-            <div id="price-val" class="value">--</div>
+    <div class="main-display">
+        <div id="ratio-badge" class="ratio-badge" style="background: #f1f2f6; color: #b2bec3;">-- %</div>
+        <div id="status-text" class="status-text">同步數據中...</div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="label">市場價格</div>
+            <div id="price-val" class="price">--</div>
         </div>
-        <div class="price-item">
+        <div class="detail-item">
             <div class="label">預估淨值</div>
-            <div id="nav-val" class="value">--</div>
+            <div id="nav-val" class="price">--</div>
         </div>
     </div>
 
-    <div id="status-display" class="status-box" style="background: #eee;">
-        讀取數據中...
-    </div>
-
-    <div class="info-footer">
-        系統每 5 秒自動同步一次數據<br>
-        數據最後更新時間：<span id="update-time">--</span><br>
-        (註：淨值更新頻率受限於 GitHub Actions 週期)
+    <div class="footer">
+        <span class="dot" id="status-dot"></span> 監控中 | 每 5 秒自動對齊一次<br>
+        最後更新：<span id="update-time">--</span>
     </div>
 </div>
 
 <script>
-    async function refreshData() {
+    async function updateDashboard() {
         try {
+            const res = await fetch('etf_data.json?t=' + Date.now());
+            const data = await res.json();
+            
+            document.getElementById('price-val').innerText = data.price;
+            document.getElementById('nav-val').innerText = data.nav;
+            document.getElementById('update-time').innerText = data.update_time;
+            
+            const badge = document.getElementById('ratio-badge');
+            const status = document.getElementById('status-text');
+            const dot = document.getElementById('status-dot');
+            const r = data.ratio;
+            
+            badge.innerText = (r > 0 ? '+' : '') + r + '%';
+            dot.style.backgroundColor = '#00cec9';
+
+            if (r > 0.1) {
+                badge.style.background = '#fff2f2'; badge.style.color = '#e74c3c';
+                status.innerText = '⚠️ 溢價偏高，建議觀望'; status.style.color = '#e74c3c';
+            } else if (r < -0.1) {
+                badge.style.background = '#ebfbee'; badge.style.color = '#27ae60';
+                status.innerText = '✅ 折價出現，適合入場'; status.style.color = '#27ae60';
+            } else {
+                badge.style.background = '#f1f2f6'; badge.style.color = '#636e72';
+                status.innerText = '⚖️ 折溢價穩定'; status.style.color = '#636e72';
+            }
+        } catch (e) {
+            console.error("Waiting for data...");
+        }
+    }
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
+</script>
+
+</body>
+</html>
