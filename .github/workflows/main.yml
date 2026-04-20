@@ -8,29 +8,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 關鍵修正：強制開啟寫入權限
     permissions:
       contents: write
     steps:
-      - name: Checkout代碼
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: 設定 Python
+      - name: Setup Python
         uses: setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: 安裝必要套件
+      - name: Install dependencies
         run: pip install requests
 
-      - name: 執行抓取程式
+      - name: Run Crawler
         run: python analysis.py
 
-      - name: 將數據推回倉庫
+      - name: Commit and Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add etf_data.json
-          # 避免沒有變動時報錯
           git commit -m "Auto-update ETF data" || exit 0
           git push
