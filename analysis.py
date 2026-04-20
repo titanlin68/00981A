@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 def get_official_data():
     try:
-        # 加上隨機時間戳 t={int(time.time())}，破解統一投信官方伺服器的快取
+        # 在 URL 加入隨機時間戳，強迫統一投信伺服器刷新數據
         timestamp = int(time.time())
         url = f"https://www.ezmoney.com.tw/api/UnitMarketRatio/GetUnitMarketRatio?fundCode=49YTW&t={timestamp}"
         
@@ -19,13 +19,17 @@ def get_official_data():
             raise Exception(f"API 請求失敗，狀態碼: {res.status_code}")
             
         data = res.json()
+        if not data:
+            raise Exception("API 回傳空資料")
+            
         target = data[0]
         
+        # 抓取官方欄位
         current_price = float(target.get('MarketPrice', 0))
         current_nav = float(target.get('Nav', 0))
         ratio = float(target.get('Ratio', 0))
 
-        # 取得台灣時間
+        # 設定台灣時間
         tw_time = datetime.utcnow() + timedelta(hours=8)
         update_str = tw_time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -41,10 +45,10 @@ def get_official_data():
         with open('etf_data.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
             
-        print(f"數據同步成功！最後校準時間：{update_str}")
+        print(f"成功更新數據: {update_str}")
 
     except Exception as e:
-        print(f"同步發生錯誤: {str(e)}")
+        print(f"執行出錯: {str(e)}")
 
 if __name__ == "__main__":
     get_official_data()
