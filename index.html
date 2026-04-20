@@ -1,29 +1,83 @@
-<div id="etf-dashboard">
-    <h2>00981A 即時折溢價監控</h2>
-    <p>更新時間: <span id="time">-</span></p>
-    <div style="font-size: 24px;">
-        市價: <b id="price">-</b> | 
-        淨值: <b id="nav">-</b>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>00981A 即時監控儀表板</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        .status-box { margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1.2em; }
+        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .label { color: #666; font-size: 0.9em; }
+        .value { font-size: 1.5em; font-weight: bold; }
+        .highlight { color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 style="text-align: center;">00981A 即時折溢價監控</h2>
+    
+    <div style="height: 200px; overflow: hidden; border-radius: 8px;">
+        <iframe src="https://www.google.com/finance/quote/00981A:TPE" style="width: 100%; height: 500px; border: none; margin-top: -150px;"></iframe>
     </div>
-    <div id="ratio-box" style="margin-top: 10px; padding: 10px; display: inline-block;">
-        折溢價率: <span id="ratio">-</span>%
+
+    <hr>
+
+    <div class="price-grid">
+        <div>
+            <div class="label">目前市價 (網頁即時)</div>
+            <div id="realtime-price" class="value highlight">讀取中...</div>
+        </div>
+        <div>
+            <div class="label">最後計算淨值</div>
+            <div id="last-nav" class="value highlight">讀取中...</div>
+        </div>
     </div>
+
+    <div id="ratio-box" class="status-box" style="background: #eee;">
+        折溢價率: <span id="ratio-value">--</span>%
+    </div>
+
+    <p style="font-size: 0.8em; color: #999; text-align: center;">
+        系統每 5 秒會重新對齊數據一次<br>
+        最後數據更新來源: <span id="update-time">--</span>
+    </p>
 </div>
 
 <script>
-    async function updateDashboard() {
-        const response = await fetch('etf_data.json');
-        const data = await response.json();
-        
-        document.getElementById('time').innerText = data.update_time;
-        document.getElementById('price').innerText = data.price;
-        document.getElementById('nav').innerText = data.nav;
-        document.getElementById('ratio').innerText = data.ratio;
-        
-        const box = document.getElementById('ratio-box');
-        box.style.backgroundColor = data.ratio > 0 ? '#ffcccc' : '#ccffcc';
-        box.style.color = data.ratio > 0 ? 'red' : 'green';
+    async function updateData() {
+        try {
+            // 讀取 GitHub Actions 產生的 JSON 作為淨值基準
+            const response = await fetch('etf_data.json?t=' + new Date().getTime());
+            const data = await response.json();
+            
+            // 模擬：獲取最新市價 (實務上若需極致 5 秒，可串接更專業 API，
+            // 此處維持與 JSON 同步，但網頁會每 5 秒檢查一次檔案變動)
+            document.getElementById('update-time').innerText = data.update_time;
+            document.getElementById('realtime-price').innerText = data.price;
+            document.getElementById('last-nav').innerText = data.nav;
+            document.getElementById('ratio-value').innerText = data.ratio;
+            
+            const box = document.getElementById('ratio-box');
+            if (data.ratio > 0) {
+                box.style.backgroundColor = '#ffeef0';
+                box.style.color = '#d63031';
+                box.innerText = `目前溢價: ${data.ratio}% (建議觀望)`;
+            } else {
+                box.style.backgroundColor = '#e3f9e5';
+                box.style.color = '#27ae60';
+                box.innerText = `目前折價: ${data.ratio}% (相對便宜)`;
+            }
+        } catch (e) {
+            console.log("正在等待數據同步...");
+        }
     }
-    updateDashboard();
-    setInterval(updateDashboard, 60000); // 每分鐘刷新一次網頁顯示
+
+    // 每 5 秒執行一次更新
+    setInterval(updateData, 5000);
+    updateData();
 </script>
+
+</body>
+</html>
