@@ -3,32 +3,34 @@ name: ETF Real-time Analysis
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *' # 每 15 分鐘自動抓取一次官網數據
+    - cron: '*/15 * * * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 關鍵修正：強制開啟寫入權限
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout代碼
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: 設定 Python
         uses: setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: 安裝必要套件
         run: pip install requests
 
-      - name: Run Crawler
+      - name: 執行抓取程式
         run: python analysis.py
 
-      - name: Push update
+      - name: 將數據推回倉庫
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add etf_data.json
+          # 避免沒有變動時報錯
           git commit -m "Auto-update ETF data" || exit 0
           git push
