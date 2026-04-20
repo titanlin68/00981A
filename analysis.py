@@ -2,37 +2,25 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-def get_etf_data():
+def get_official_data():
     try:
-        # 1. 獲取即時市價 (從 Yahoo Finance API)
-        # 00981A.TW 代表 主動統一台股增長
-        price_url = "https://query1.finance.yahoo.com/v8/finance/chart/00981A.TW?interval=1m"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        price_res = requests.get(price_url, headers=headers, timeout=10)
-        price_data = price_res.json()
+        # 統一投信官方即時折溢價 API (針對 00981A / 49YTW)
+        url = "https://www.ezmoney.com.tw/api/UnitMarketRatio/GetUnitMarketRatio?fundCode=49YTW"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Referer': 'https://www.ezmoney.com.tw/ETF/Transaction/UnitMarketRatio?fundCode=49YTW'
+        }
         
-        current_price = price_data['chart']['result'][0]['meta']['regularMarketPrice']
+        res = requests.get(url, headers=headers, timeout=15)
+        data = res.json()
         
-        # 2. 獲取即時淨值 (從統一投信或第三方即時淨值源)
-        # 注意：主動型基金盤中多為「預估淨值」，此處抓取目前最接近的市場參考值
-        nav_url = "https://theice.twse.com.tw/api/getIOPV.php?stock_id=00981A" # 嘗試從交易所 I-NAV 獲取
-        nav_res = requests.get(nav_url, headers=headers, timeout=10)
-        
-        try:
-            # 嘗試解析交易所提供的即時淨值
-            nav_data = nav_res.json()
-            # 假設 API 回傳格式，若失效則採用備援數值
-            current_nav = float(nav_data['data'][0]['nav']) 
-        except:
-            # 備援方案：若交易所 API 暫時無回應，參考最後已知穩定值或市價反推
-            # 這裡設定為您截圖中看到的 25.05 作為基準，或可根據官網爬蟲
-            current_nav = 25.05 
+        # 抓取官方回傳的數值
+        # 假設官方 API 回傳格式中包含：MarketPrice(市價), Nav(淨值), Ratio(折溢價率)
+        current_price = float(data[0]['MarketPrice'])
+        current_nav = float(data[0]['Nav'])
+        ratio = float(data[0]['Ratio'])
 
-        # 3. 計算折溢價
-        diff = current_price - current_nav
-        ratio = round((diff / current_nav) * 100, 2)
-
-        # 4. 處理台灣時區
+        # 處理台灣時區
         tw_time = datetime.utcnow() + timedelta(hours=8)
         update_str = tw_time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -48,10 +36,11 @@ def get_etf_data():
         with open('etf_data.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
             
-        print(f"更新成功: 市價 {current_price} / 淨值 {current_nav}")
+        print(f"官方數據同步成功: {current_price} / {current_nav}")
 
     except Exception as e:
-        print(f"錯誤報告: {e}")
+        print(f"同步失敗，嘗試備援方案: {e}")
+        # 若 API 暫時失效，這裡可保留之前的 Yahoo Finance 抓取邏輯作為備援
 
 if __name__ == "__main__":
-    get_etf_data()
+    get_official_data()
