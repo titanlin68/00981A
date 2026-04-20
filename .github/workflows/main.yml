@@ -1,4 +1,4 @@
-name: ETF Real-time Analysis
+name: ETF-Auto-Update
 
 on:
   workflow_dispatch:
@@ -6,29 +6,29 @@ on:
     - cron: '*/15 * * * *'
 
 jobs:
-  build:
+  update-task:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install Requests
         run: pip install requests
 
-      - name: Run Crawler
+      - name: Run Script
         run: python analysis.py
 
-      - name: Commit and Push
+      - name: Commit Results
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add etf_data.json
-          git commit -m "Auto-update ETF data" || exit 0
+          git commit -m "chore: update etf data" || exit 0
           git push
