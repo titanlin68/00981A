@@ -2,43 +2,52 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>00981A 監控</title>
+    <title>00981A 監控儀表板</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 320px; }
-        .price-box { font-size: 3em; font-weight: bold; margin: 20px 0; color: #2d3436; }
-        .details { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 20px; }
-        .label { color: #636e72; font-size: 0.8em; }
-        .val { font-size: 1.2em; font-weight: bold; }
-        .footer { margin-top: 20px; font-size: 0.7em; color: #b2bec3; }
+        body { font-family: -apple-system, sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; width: 320px; }
+        .title { color: #636e72; font-size: 0.9em; font-weight: bold; margin-bottom: 10px; }
+        .ratio { font-size: 3.5em; font-weight: 900; margin: 15px 0; color: #2d3436; }
+        .status { font-weight: bold; margin-bottom: 25px; padding: 5px 15px; border-radius: 50px; display: inline-block; font-size: 0.85em; }
+        .grid { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 25px; }
+        .label { color: #b2bec3; font-size: 0.75em; margin-bottom: 5px; }
+        .value { font-size: 1.3em; font-weight: bold; color: #2d3436; }
+        .time { margin-top: 30px; font-size: 0.7em; color: #dfe6e9; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div style="color: #0984e3; font-weight: bold;">00981A 統一台股增長</div>
-        <div id="r-val" class="price-box">--%</div>
-        <div id="hint" style="font-weight: bold; margin-bottom: 20px;">讀取中...</div>
-        <div class="details">
-            <div><div class="label">市價</div><div id="p-val" class="val">--</div></div>
-            <div><div class="label">淨值</div><div id="n-val" class="val">--</div></div>
+        <div class="title">00981A 主動統一台股增長</div>
+        <div id="r" class="ratio">--%</div>
+        <div id="s" class="status" style="background:#eee">載入中...</div>
+        <div class="grid">
+            <div><div class="label">官方市價</div><div id="p" class="value">--</div></div>
+            <div><div class="label">官方淨值</div><div id="n" class="value">--</div></div>
         </div>
-        <div class="footer">更新時間：<span id="ts">--</span></div>
+        <div class="time">最後校準：<span id="t">--</span></div>
     </div>
     <script>
-        async function load() {
+        async function refresh() {
             try {
-                const r = await fetch('etf_data.json?t=' + Date.now());
-                const d = await r.json();
-                document.getElementById('p-val').innerText = d.price.toFixed(2);
-                document.getElementById('n-val').innerText = d.nav.toFixed(2);
-                document.getElementById('ts').innerText = d.update_time;
-                const rv = document.getElementById('r-val');
-                rv.innerText = (d.ratio > 0 ? '+' : '') + d.ratio.toFixed(2) + '%';
-                rv.style.color = d.ratio > 0.15 ? '#d63031' : (d.ratio < -0.15 ? '#27ae60' : '#2d3436');
-                document.getElementById('hint').innerText = d.ratio > 0.15 ? '溢價偏高' : '價格正常';
-            } catch(e) { console.error(e); }
+                const res = await fetch('etf_data.json?v=' + Date.now());
+                const d = await res.json();
+                document.getElementById('p').innerText = d.price.toFixed(2);
+                document.getElementById('n').innerText = d.nav.toFixed(2);
+                document.getElementById('t').innerText = d.update_time;
+                const rEl = document.getElementById('r');
+                const sEl = document.getElementById('s');
+                const val = d.ratio;
+                rEl.innerText = (val > 0 ? '+' : '') + val.toFixed(2) + '%';
+                if(val > 0.15) {
+                    rEl.style.color = '#e74c3c'; sEl.innerText = '⚠️ 溢價偏高'; sEl.style.color = '#e74c3c'; sEl.style.background = '#fdedec';
+                } else if(val < -0.15) {
+                    rEl.style.color = '#27ae60'; sEl.innerText = '✅ 折價吸引'; sEl.style.color = '#27ae60'; sEl.style.background = '#eafaf1';
+                } else {
+                    rEl.style.color = '#2d3436'; sEl.innerText = '✨ 價格同步'; sEl.style.color = '#636e72'; sEl.style.background = '#f1f2f6';
+                }
+            } catch(e) { console.error("Data fetch error"); }
         }
-        load(); setInterval(load, 10000);
+        refresh(); setInterval(refresh, 5000);
     </script>
 </body>
 </html>
