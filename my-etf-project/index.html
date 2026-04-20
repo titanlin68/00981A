@@ -1,0 +1,29 @@
+<div id="etf-dashboard">
+    <h2>00981A 即時折溢價監控</h2>
+    <p>更新時間: <span id="time">-</span></p>
+    <div style="font-size: 24px;">
+        市價: <b id="price">-</b> | 
+        淨值: <b id="nav">-</b>
+    </div>
+    <div id="ratio-box" style="margin-top: 10px; padding: 10px; display: inline-block;">
+        折溢價率: <span id="ratio">-</span>%
+    </div>
+</div>
+
+<script>
+    async function updateDashboard() {
+        const response = await fetch('etf_data.json');
+        const data = await response.json();
+        
+        document.getElementById('time').innerText = data.update_time;
+        document.getElementById('price').innerText = data.price;
+        document.getElementById('nav').innerText = data.nav;
+        document.getElementById('ratio').innerText = data.ratio;
+        
+        const box = document.getElementById('ratio-box');
+        box.style.backgroundColor = data.ratio > 0 ? '#ffcccc' : '#ccffcc';
+        box.style.color = data.ratio > 0 ? 'red' : 'green';
+    }
+    updateDashboard();
+    setInterval(updateDashboard, 60000); // 每分鐘刷新一次網頁顯示
+</script>
