@@ -3,94 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>00981A 即時監控</title>
+    <title>00981A 官方同步監控</title>
     <style>
-        :root { --accent: #0984e3; --red: #d63031; --green: #27ae60; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f5f6fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 35px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.06); max-width: 420px; width: 90%; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .symbol-tag { background: #dfe6e9; color: #636e72; padding: 4px 12px; border-radius: 6px; font-size: 0.9em; font-weight: bold; }
-        .name { font-size: 1.6em; font-weight: 800; color: #2d3436; margin: 10px 0 5px 0; }
+        :root { --red: #d63031; --green: #27ae60; --dark: #2d3436; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.07); max-width: 400px; width: 85%; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .tag { background: #f1f2f6; color: #7f8c8d; padding: 5px 15px; border-radius: 50px; font-size: 0.85em; font-weight: 600; }
+        .name { font-size: 1.8em; font-weight: 900; color: var(--dark); margin: 15px 0 0 0; letter-spacing: -0.5px; }
         
-        .main-score { text-align: center; margin: 30px 0; }
-        .ratio-val { font-size: 3.5em; font-weight: 900; line-height: 1; margin-bottom: 10px; }
-        .status-msg { font-size: 1.1em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .hero { text-align: center; margin: 35px 0; }
+        .ratio-display { font-size: 4em; font-weight: 900; margin: 0; line-height: 1; }
+        .hint { font-size: 1.15em; font-weight: 700; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; padding-top: 25px; border-top: 1px dashed #ddd; }
-        .data-item { text-align: center; }
-        .data-label { color: #b2bec3; font-size: 0.8em; margin-bottom: 8px; }
-        .data-price { font-size: 1.6em; font-weight: 700; color: #2d3436; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 35px; border-top: 1px solid #eee; padding-top: 30px; }
+        .item { text-align: center; }
+        .label { color: #a4b0be; font-size: 0.8em; margin-bottom: 8px; font-weight: 600; }
+        .num { font-size: 1.7em; font-weight: 800; color: var(--dark); }
         
-        .footer { font-size: 0.75em; color: #b2bec3; text-align: center; margin-top: 35px; line-height: 1.6; }
-        .pulse { height: 6px; width: 6px; background: #00cec9; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(2); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
+        .footer { font-size: 0.75em; color: #ced6e0; text-align: center; margin-top: 40px; line-height: 1.7; }
+        .live-icon { height: 8px; width: 8px; background: #00cec9; border-radius: 50%; display: inline-block; margin-right: 6px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div class="header">
-        <span class="symbol-tag">股票代號: 00981A</span>
+        <span class="tag">股票代號: 00981A</span>
         <div class="name">主動統一台股增長</div>
     </div>
 
-    <div class="main-score">
-        <div id="ratio-val" class="ratio-val">--%</div>
-        <div id="status-msg" class="status-msg">正在連線報價源...</div>
+    <div class="hero">
+        <div id="r-val" class="ratio-display">--%</div>
+        <div id="r-hint" class="hint">讀取官方數據中...</div>
     </div>
 
-    <div class="data-grid">
-        <div class="data-item">
-            <div class="data-label">市場價格</div>
-            <div id="price-val" class="data-price">--</div>
+    <div class="grid">
+        <div class="item">
+            <div class="label">官方即時市價</div>
+            <div id="p-val" class="num">--</div>
         </div>
-        <div class="data-item">
-            <div class="data-label">同步淨值</div>
-            <div id="nav-val" class="data-price">--</div>
+        <div class="item">
+            <div class="label">官方即時淨值</div>
+            <div id="n-val" class="num">--</div>
         </div>
     </div>
 
     <div class="footer">
-        <span class="pulse"></span> 即時監控中 | 每 5 秒同步一次數據<br>
-        最後更新：<span id="update-time">--</span>
+        <span class="live-icon"></span> 官方數據源已同步 | 每 5 秒更新<br>
+        最後校準：<span id="ts">--</span>
     </div>
 </div>
 
 <script>
-    async function updateUI() {
+    async function syncData() {
         try {
-            const res = await fetch('etf_data.json?t=' + Date.now());
-            const d = await res.json();
+            const r = await fetch('etf_data.json?v=' + Date.now());
+            const d = await r.json();
             
-            document.getElementById('price-val').innerText = d.price.toFixed(2);
-            document.getElementById('nav-val').innerText = d.nav.toFixed(2);
-            document.getElementById('update-time').innerText = d.update_time;
+            document.getElementById('p-val').innerText = d.price.toFixed(2);
+            document.getElementById('n-val').innerText = d.nav.toFixed(2);
+            document.getElementById('ts').innerText = d.update_time;
             
-            const rVal = document.getElementById('ratio-val');
-            const sMsg = document.getElementById('status-msg');
-            const r = d.ratio;
+            const rv = document.getElementById('r-val');
+            const rh = document.getElementById('r-hint');
+            const val = d.ratio;
 
-            rVal.innerText = (r > 0 ? '+' : '') + r.toFixed(2) + '%';
+            rv.innerText = (val > 0 ? '+' : '') + val.toFixed(2) + '%';
             
-            if (r > 0.1) {
-                rVal.style.color = 'var(--red)';
-                sMsg.innerHTML = '🔴 溢價中，請謹慎買進';
-                sMsg.style.color = 'var(--red)';
-            } else if (r < -0.1) {
-                rVal.style.color = 'var(--green)';
-                sMsg.innerHTML = '🟢 折價中，目前價位較便宜';
-                sMsg.style.color = 'var(--green)';
+            if (val > 0.15) {
+                rv.style.color = 'var(--red)';
+                rh.innerHTML = '⚠️ 溢價較高，建議稍候';
+                rh.style.color = 'var(--red)';
+            } else if (val < -0.15) {
+                rv.style.color = 'var(--green)';
+                rh.innerHTML = '✅ 折價吸引，適合配置';
+                rh.style.color = 'var(--green)';
             } else {
-                rVal.style.color = '#2d3436';
-                sMsg.innerHTML = '⚪ 價格與淨值趨於一致';
-                sMsg.style.color = '#636e72';
+                rv.style.color = var(--dark);
+                rh.innerHTML = '✨ 價格與官網淨值同步';
+                rh.style.color = '#747d8c';
             }
-        } catch (e) {
-            console.log("Waiting for data update...");
-        }
+        } catch (e) { }
     }
-    setInterval(updateUI, 5000);
-    updateUI();
+    setInterval(syncData, 5000);
+    syncData();
 </script>
 
 </body>
